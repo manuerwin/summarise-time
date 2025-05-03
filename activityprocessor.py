@@ -12,6 +12,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+EXPECTED_HEADER = ["Date", "Activity", "Duration"]
+
+
+def check_csv_header(csv_data):
+    first_line = csv_data.lstrip().splitlines()[0]
+    if first_line.startswith('\ufeff'):
+        first_line = first_line.replace('\ufeff', '')
+    header = [col.strip() for col in first_line.split(',')]
+    if header != EXPECTED_HEADER:
+        raise ValueError(
+            f"CSV header mismatch: got {header}, expected {EXPECTED_HEADER}")
+
+
 def duration_to_minutes(duration_str):
     logger.debug(f"Parsing duration: {duration_str}")
     parts = duration_str.strip().split(':')
@@ -47,11 +60,13 @@ def clean_activity_name(activity, category):
 
 
 def process_activities(csv_data):
+    logger.info("Checking csv header")
+    check_csv_header(csv_data)
     logger.info("Processing CSV data")
     # Prepare the result structure
     result = defaultdict(lambda:
                          defaultdict(lambda:
-                                     {'totalTime': 0, 'activities': []}))
+                                     {'total_time': 0, 'activities': []}))
     reader = csv.DictReader(io.StringIO(csv_data), skipinitialspace=True)
     for row in reader:
         date = row['Date'].strip()
@@ -64,7 +79,7 @@ def process_activities(csv_data):
         activity = clean_activity_name(activity_raw, category)
         minutes = duration_to_minutes(duration_str)
 
-        result[date][category]['totalTime'] += minutes
+        result[date][category]['total_time'] += minutes
         result[date][category]['activities'].append((activity, minutes))
 
     logger.info("Processing complete")
@@ -88,6 +103,6 @@ if __name__ == "__main__":
     for date in result:
         print(date)
         for category in result[date]:
-            print(f"{category} - total: {result[date][category]['totalTime']}")
+            print(f"{category} - total: {result[date][category]['total_time']}")
             for activity, duration in result[date][category]['activities']:
                 print(f"- {activity} ({duration})")

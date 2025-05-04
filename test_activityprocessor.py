@@ -44,25 +44,45 @@ class TestActivityProcessing(unittest.TestCase):
     def test_full_processing(self):
         expected = {
             '28/04/2025': {
-                'BSR': {'total_time': 60, 'activities': [('Doctor appointment', 30), ('admin', 30)]},
-                'BSR OPS': {'total_time': 15, 'activities': [('Pick up mail', 15)]},
-                'INTERNAL': {'total_time': 60, 'activities': [('tax return', 60)]},
-                'PRACTICE': {'total_time': 60, 'activities': [('Papa Reo', 60)]}
+                'BSR':
+                    {'total_time': 60,
+                     'activities': [('Doctor appointment', 30),
+                                    ('admin', 30)]},
+                'BSR OPS':
+                    {'total_time': 15,
+                     'activities': [('Pick up mail', 15)]},
+                'INTERNAL':
+                    {'total_time': 60,
+                     'activities': [('tax return', 60)]},
+                'PRACTICE':
+                    {'total_time': 60,
+                     'activities': [('Papa Reo', 60)]}
             },
             '29/04/2025': {
-                'BSR': {'total_time': 60, 'activities': [('admin', 30), ('admin', 30)]},
-                'PRACTICE': {'total_time': 45, 'activities': [('PT conditioning', 45)]},
-                'OTHER': {'total_time': 30, 'activities': [('something else', 30)]}
+                'BSR':
+                    {'total_time': 60,
+                     'activities': [('admin', 30), ('admin', 30)]},
+                'PRACTICE':
+                    {'total_time': 45,
+                     'activities': [('PT conditioning', 45)]},
+                'OTHER':
+                    {'total_time': 30,
+                     'activities': [('something else', 30)]}
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.csv', encoding='utf-8') as tmpfile:
+        with tempfile.NamedTemporaryFile(mode='w+',
+                                         delete=False,
+                                         suffix='.csv',
+                                         encoding='utf-8') as tmpfile:
             tmpfile.write(SAMPLE_CSV)
             tmpfile.flush()
             tmp_csv_path = tmpfile.name
 
         try:
-            with open(tmp_csv_path, 'r', encoding='utf-8') as f:
+            with open(tmp_csv_path,
+                      'r',
+                      encoding='utf-8') as f:
                 csv_content = f.read()
             result = ap.process_activities(csv_content)
             self.assertEqual(result, expected)

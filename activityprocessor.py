@@ -103,6 +103,8 @@ if __name__ == "__main__":
     for date in result:
         print(date)
         for category in result[date]:
-            print(f"{category} - total: {result[date][category]['total_time']}")
+            print(
+                f"{category} - total: {result[date][category]['total_time']}")
             for activity, duration in result[date][category]['activities']:
-                print(f"- {activity} ({duration})")
+                print(
+                    f"- {activity} ({duration})")

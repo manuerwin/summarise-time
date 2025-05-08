@@ -8,7 +8,10 @@ Python app - process and summarise activity lines from CSV
 1. Download to local
 2. Generate your csv file of activities with:
 - headers: Date, Activity, Duration
-- each row: date in format dd/mm/yyyy, activity text, duration in format [optional hours]:minutes:seconds
+- each row:
+-- date in format dd/mm/yyyy
+-- activity text
+-- duration in format [optional hours]:minutes:seconds
 For example:
 28/04/2025, Doctor appointment, 30:00
 3. Run this script:

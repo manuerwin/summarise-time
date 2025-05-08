@@ -32,6 +32,11 @@ class TestActivityProcessing(unittest.TestCase):
         self.assertEqual(ap.duration_to_minutes('1:00:00'), 60)
         self.assertEqual(ap.duration_to_minutes('1:30:00'), 90)
         self.assertEqual(ap.duration_to_minutes('2:15:00'), 135)
+        self.assertEqual(ap.duration_to_minutes('0:90:00'), 90)
+        self.assertEqual(ap.duration_to_minutes('0:60:00'), 60)
+        self.assertEqual(ap.duration_to_minutes('90:00'), 90)
+        self.assertEqual(ap.duration_to_minutes('60:00'), 60)
+        self.assertEqual(ap.duration_to_minutes('2:75:00'), 195)
 
     def test_category_extraction(self):
         self.assertEqual(ap.extract_category('BSR OPS - Test'), 'BSR OPS')

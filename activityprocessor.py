@@ -101,10 +101,12 @@ if __name__ == "__main__":
 
     result = process_activities(csv_data)
     for date in result:
+        print("")
         print(date)
         for category in result[date]:
             print(
-                f"{category} - total: {result[date][category]['total_time']}")
+                f"{category}-total {result[date][category]['total_time']}")
             for activity, duration in result[date][category]['activities']:
                 print(
                     f"- {activity} ({duration})")
+            print("")

@@ -24,6 +24,6 @@ Anyone is free to copy, modify, publish, use, compile, sell, or distribute this 
 
 ## Development testing
 Via shell
-> python3 -m unittest -v ./test_activityprocessor.py
+> pytest -v
 
 Or use VS Code Testing :)

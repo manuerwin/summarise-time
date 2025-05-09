@@ -1,8 +1,7 @@
-import unittest
+import pytest
 import tempfile
 import os
 import activityprocessor as ap
-
 
 SAMPLE_CSV = """Date, Activity, Duration
 28/04/2025, BSR Doctor appointment, 30:00
@@ -16,84 +15,73 @@ SAMPLE_CSV = """Date, Activity, Duration
 29/04/2025, something else, 30:00
 """
 
+def test_valid_header():
+    csv_data = "Date, Activity, Duration\nrow1,row2,row3"
+    ap.check_csv_header(csv_data)  # Should not raise
 
-class TestActivityProcessing(unittest.TestCase):
-    def test_valid_header(self):
-        csv_data = "Date, Activity, Duration\nrow1,row2,row3"
-        ap.check_csv_header(csv_data)  # Should not raise
+def test_invalid_header_typo():
+    csv_data = "Date, Activity, Durtion\nrow1,row2,row3"
+    with pytest.raises(ValueError):
+        ap.check_csv_header(csv_data)
 
-    def test_invalid_header_typo(self):
-        csv_data = "Date, Activity, Durtion\nrow1,row2,row3"
-        with self.assertRaises(ValueError):
-            ap.check_csv_header(csv_data)
+@pytest.mark.parametrize("input_str,expected", [
+    ('30:00', 30),
+    ('1:00:00', 60),
+    ('1:30:00', 90),
+    ('2:15:00', 135),
+    ('0:90:00', 90),
+    ('0:60:00', 60),
+    ('90:00', 90),
+    ('60:00', 60),
+    ('2:75:00', 195),
+])
+def test_duration_parsing(input_str, expected):
+    assert ap.duration_to_minutes(input_str) == expected
 
-    def test_duration_parsing(self):
-        self.assertEqual(ap.duration_to_minutes('30:00'), 30)
-        self.assertEqual(ap.duration_to_minutes('1:00:00'), 60)
-        self.assertEqual(ap.duration_to_minutes('1:30:00'), 90)
-        self.assertEqual(ap.duration_to_minutes('2:15:00'), 135)
-        self.assertEqual(ap.duration_to_minutes('0:90:00'), 90)
-        self.assertEqual(ap.duration_to_minutes('0:60:00'), 60)
-        self.assertEqual(ap.duration_to_minutes('90:00'), 90)
-        self.assertEqual(ap.duration_to_minutes('60:00'), 60)
-        self.assertEqual(ap.duration_to_minutes('2:75:00'), 195)
+@pytest.mark.parametrize("activity,expected", [
+    ('BSR OPS - Test', 'BSR OPS'),
+    ('BSR OPS no dash', 'BSR OPS'),
+    ('BSR - Test', 'BSR'),
+    ('BSR Test no dash', 'BSR'),
+    ('PRACTICE Test', 'PRACTICE'),
+    ('Test other', 'OTHER'),
+])
+def test_category_extraction(activity, expected):
+    assert ap.extract_category(activity) == expected
 
-    def test_category_extraction(self):
-        self.assertEqual(ap.extract_category('BSR OPS - Test'), 'BSR OPS')
-        self.assertEqual(ap.extract_category('BSR OPS no dash'), 'BSR OPS')
-        self.assertEqual(ap.extract_category('BSR - Test'), 'BSR')
-        self.assertEqual(ap.extract_category('BSR Test no dash'), 'BSR')
-        self.assertEqual(ap.extract_category('PRACTICE Test'), 'PRACTICE')
-        self.assertEqual(ap.extract_category('Test other'), 'OTHER')
-
-    def test_full_processing(self):
-        expected = {
-            '28/04/2025': {
-                'BSR':
-                    {'total_time': 60,
-                     'activities': [('Doctor appointment', 30),
-                                    ('admin', 30)]},
-                'BSR OPS':
-                    {'total_time': 15,
-                     'activities': [('Pick up mail', 15)]},
-                'INTERNAL':
-                    {'total_time': 60,
-                     'activities': [('tax return', 60)]},
-                'PRACTICE':
-                    {'total_time': 60,
-                     'activities': [('Papa Reo', 60)]}
-            },
-            '29/04/2025': {
-                'BSR':
-                    {'total_time': 60,
-                     'activities': [('admin', 30), ('admin', 30)]},
-                'PRACTICE':
-                    {'total_time': 45,
-                     'activities': [('PT conditioning', 45)]},
-                'OTHER':
-                    {'total_time': 30,
-                     'activities': [('something else', 30)]}
-            }
+def test_full_processing(tmp_path):
+    expected = {
+        '28/04/2025': {
+            'BSR':
+                {'total_time': 60,
+                 'activities': [('Doctor appointment', 30),
+                                ('admin', 30)]},
+            'BSR OPS':
+                {'total_time': 15,
+                 'activities': [('Pick up mail', 15)]},
+            'INTERNAL':
+                {'total_time': 60,
+                 'activities': [('tax return', 60)]},
+            'PRACTICE':
+                {'total_time': 60,
+                 'activities': [('Papa Reo', 60)]}
+        },
+        '29/04/2025': {
+            'BSR':
+                {'total_time': 60,
+                 'activities': [('admin', 30), ('admin', 30)]},
+            'PRACTICE':
+                {'total_time': 45,
+                 'activities': [('PT conditioning', 45)]},
+            'OTHER':
+                {'total_time': 30,
+                 'activities': [('something else', 30)]}
         }
+    }
 
-        with tempfile.NamedTemporaryFile(mode='w+',
-                                         delete=False,
-                                         suffix='.csv',
-                                         encoding='utf-8') as tmpfile:
-            tmpfile.write(SAMPLE_CSV)
-            tmpfile.flush()
-            tmp_csv_path = tmpfile.name
+    tmp_csv_path = tmp_path / "test.csv"
+    tmp_csv_path.write_text(SAMPLE_CSV, encoding='utf-8')
 
-        try:
-            with open(tmp_csv_path,
-                      'r',
-                      encoding='utf-8') as f:
-                csv_content = f.read()
-            result = ap.process_activities(csv_content)
-            self.assertEqual(result, expected)
-        finally:
-            os.remove(tmp_csv_path)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    csv_content = tmp_csv_path.read_text(encoding='utf-8')
+    result = ap.process_activities(csv_content)
+    assert result == expected

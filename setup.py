@@ -6,7 +6,7 @@ sut.setup(
     description="Python app - process and summarise activity lines from CSV",
     author="Manu Erwin",
     packages=sut.find_packages(),
-    python_requires=">=3.7",
+    python_requires=">=3.13",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

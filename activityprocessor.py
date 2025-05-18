@@ -43,6 +43,11 @@ def duration_to_minutes(duration_str):
     return round(minutes)
 
 
+def minutes_to_hours_decimal(minutes):
+    logger.debug(f"Parsing minutes to hours decimal: {minutes}")
+    return round(minutes / 60, 2)
+
+
 def extract_category(activity):
     logger.debug(f"Extracting category from activity: {activity}")
     for cat in ['BSR OPS', 'BSR', 'INTERNAL', 'PRACTICE']:
@@ -60,31 +65,51 @@ def clean_activity_name(activity, category):
 
 
 def process_activities(csv_data):
-    logger.info("Checking csv header")
     check_csv_header(csv_data)
-    logger.info("Processing CSV data")
-    # Prepare the result structure
-    result = defaultdict(lambda:
-                         defaultdict(lambda:
-                                     {'total_time': 0, 'activities': []}))
     reader = csv.DictReader(io.StringIO(csv_data), skipinitialspace=True)
+
+    result = {}
+
     for row in reader:
         date = row['Date'].strip()
         activity_raw = row['Activity'].strip()
         duration_str = row['Duration'].strip()
 
-        logger.debug(f"Processing row: {row}")
-
         category = extract_category(activity_raw)
         activity = clean_activity_name(activity_raw, category)
         minutes = duration_to_minutes(duration_str)
 
-        result[date][category]['total_time'] += minutes
-        result[date][category]['activities'].append((activity, minutes))
+        # Initialize date entry if not present
+        if date not in result:
+            result[date] = {
+                'totalTimeMinutes': 0,
+                'totalTimeHours': 0.0
+            }
 
-    logger.info("Processing complete")
-    # Convert defaultdicts to dicts for output
-    return {date: dict(cats) for date, cats in result.items()}
+        # Initialize category entry if not present
+        if category not in result[date]:
+            result[date][category] = {
+                'totalTimeMinutes': 0,
+                'totalTimeHours': 0.0,
+                'activities': []
+            }
+
+        # Combine duplicate activities (preserving order)
+        activities = result[date][category]['activities']
+        for i, (act, mins) in enumerate(activities):
+            if act == activity:
+                activities[i] = (act, mins + minutes)
+                break
+        else:
+            activities.append((activity, minutes))
+
+        # Update category and day totals
+        result[date][category]['totalTimeMinutes'] += minutes
+        result[date][category]['totalTimeHours'] = minutes_to_hours_decimal(result[date][category]['totalTimeMinutes'])
+        result[date]['totalTimeMinutes'] += minutes
+        result[date]['totalTimeHours'] = minutes_to_hours_decimal(result[date]['totalTimeMinutes'])
+
+    return result
 
 
 if __name__ == "__main__":
@@ -101,12 +126,12 @@ if __name__ == "__main__":
 
     result = process_activities(csv_data)
     for date in result:
-        print("")
-        print(date)
-        for category in result[date]:
-            print(
-                f"{category}-total {result[date][category]['total_time']}")
-            for activity, duration in result[date][category]['activities']:
-                print(
-                    f"- {activity} ({duration})")
-            print("")
+        print(f"\n{date} ({result[date]['totalTimeHours']})")
+        # Print per-category totalTimeHours and activities
+        for category, cat_data in result[date].items():
+            if category.startswith("totalTime"):
+                continue
+            print(f"{category} ({cat_data['totalTimeHours']})")
+            for activity, minutes in cat_data['activities']:
+                hours = minutes_to_hours_decimal(minutes)
+                print(f"  - {activity} ({hours})")

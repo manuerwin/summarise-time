@@ -2,7 +2,7 @@ import setuptools as sut
 
 sut.setup(
     name="Summarise Activities",
-    version="1.0.1",
+    version="1.1.0",
     description="Python app - process and summarise activity lines from CSV",
     author="Manu Erwin",
     packages=sut.find_packages(),

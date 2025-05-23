@@ -2,6 +2,7 @@ import csv
 import logging
 import sys
 import io
+import re
 
 # Configure logging
 logging.basicConfig(
@@ -58,9 +59,12 @@ def extract_category(activity):
 
 
 def clean_activity_name(activity, category):
+    # Remove the category prefix and any leading/trailing spaces/dashes
     cleaned = activity.replace(category, '', 1).strip(' -')
-    logger.debug(f"Cleaned activity name: '{activity}' -> '{cleaned}'")
-    return cleaned
+    # If there's a '|', remove everything from it onwards
+    if '|' in cleaned:
+        cleaned = cleaned.split('|', 1)[0].rstrip()
+    return cleaned.strip()
 
 
 def process_activities(csv_data):

@@ -56,31 +56,45 @@ def test_category_extraction(activity, expected):
     assert ap.extract_category(activity) == expected
 
 
-SAMPLE_CSV = """Date, Activity, Duration
-"""
+@pytest.mark.parametrize("category,activity,expected", [
+    ('BSR OPS', 'BSR OPS - no pipe', 'no pipe'),
+    ('BSR OPS', 'BSR OPS - nothing after pipe|', 'nothing after pipe'),
+    ('BSR', 'BSR pipe+no space|no space', 'pipe+no space'),
+    ('BSR', 'BSR pipe+space | ignore', 'pipe+space'),
+    ('BSR', 'BSR pipe+space |  ignore', 'pipe+space'),
+    ('BSR', 'BSR pipe+space  | ignore', 'pipe+space'),
+    ('BSR', 'BSR pipe+space |ignore', 'pipe+space'),
+    ('BSR', 'BSR pipe+space| ignore', 'pipe+space'),
+])
+def test_clean_activity_name(category, activity, expected):
+    assert ap.clean_activity_name(activity, category) == expected
+
 
 @pytest.mark.parametrize("input_csv,expected", [
     (
         "Date, Activity, Duration\n"
-        "28/04/2025, BSR appointment, 30:00\n"
+        "28/04/2025, BSR appointment | detail to be ignored, 30:00\n"
         "28/04/2025, BSR OPS - Pick up mail, 15:00\n"
-        "28/04/2025, BSR - admin, 30:00\n"
+        "28/04/2025, BSR - admin |detail to be ignored, 30:00\n"
         "28/04/2025, INTERNAL tax return, 1:00:00\n"
+        "28/04/2025, BSR - admin| duplicate combined with above, 30:00\n"
         "28/04/2025, PRACTICE - Papa Reo, 1:00:00\n"
-        "29/04/2025, PRACTICE - admin, 30:00\n"
+        "28/04/2025, BSR - admin | , 30:00\n"
+        "29/04/2025, PRACTICE - admin| detail to be ignored, 30:00\n"
         "29/04/2025, PRACTICE - PT conditioning, 45:00\n"
         "29/04/2025, BSR - admin, 30:00\n"
-        "29/04/2025, something else, 30:00\n",
+        "29/04/2025, something else | detail to be ignored, 30:00\n"
+        "29/04/2025, something else |, 30:00\n",
         {
             '28/04/2025': {
-                'totalTimeMinutes': 195,
-                'totalTimeHours': 3.25,
+                'totalTimeMinutes': 255,
+                'totalTimeHours': 4.25,
                 'BSR': {
-                    'totalTimeMinutes': 60,
-                    'totalTimeHours': 1.0,
+                    'totalTimeMinutes': 120,
+                    'totalTimeHours': 2.0,
                     'activities': [
                         ('appointment', 30),
-                        ('admin', 30)
+                        ('admin', 90)
                     ]
                 },
                 'BSR OPS': {
@@ -106,8 +120,8 @@ SAMPLE_CSV = """Date, Activity, Duration
                 }
             },
             '29/04/2025': {
-                'totalTimeMinutes': 135,
-                'totalTimeHours': 2.25,
+                'totalTimeMinutes': 165,
+                'totalTimeHours': 2.75,
                 'PRACTICE': {
                     'totalTimeMinutes': 75,
                     'totalTimeHours': 1.25,
@@ -124,10 +138,10 @@ SAMPLE_CSV = """Date, Activity, Duration
                     ]
                 },
                 'OTHER': {
-                    'totalTimeMinutes': 30,
-                    'totalTimeHours': 0.5,
+                    'totalTimeMinutes': 60,
+                    'totalTimeHours': 1.0,
                     'activities': [
-                        ('something else', 30)
+                        ('something else', 60)
                     ]
                 }
             }

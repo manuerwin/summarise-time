@@ -2,12 +2,12 @@ import pytest
 import activityprocessor as ap
 
 
-def test_valid_header():
+def test_valid_header_should_not_fail():
     csv_data = "Date, Activity, Duration\nrow1,row2,row3"
     ap.check_csv_header(csv_data)  # Should not raise
 
 
-def test_invalid_header_typo():
+def test_invalid_header_typo_should_raise_valueError():
     csv_data = "Date, Activity, Durtion\nrow1,row2,row3"
     with pytest.raises(ValueError):
         ap.check_csv_header(csv_data)

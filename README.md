@@ -6,16 +6,23 @@ Python app - process and summarise activity lines from CSV
 
 ## Usage
 1. Download to local
-2. Generate your csv file of activities with:
-- headers: Date, Activity, Duration
+2. Generate your csv file of activities
+- header format: Date, Activity, Duration
 - each row:
   - date in format dd/mm/yyyy
-  - activity text
+  - category and activity text
+    - note: dash is optional and will be removed
+    - note: any detail after the pipe (|) character (for example XXX above) will be removed
   - duration in format [optional hours]:minutes:seconds
+
 For example:
-28/04/2025, Doctor appointment, 30:00
+
+28/04/2025, INTERNAL - Doctor appointment | TMI, 30:00
+
 3. Run this script:
 >python3 activityprocessor.py path/to/your/.csv
+
+You will be warned if the header doesn't match and/or any csv rows are malformed.
 
 ## License
 This is free and unencumbered software released into the public domain.

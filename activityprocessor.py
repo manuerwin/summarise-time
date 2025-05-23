@@ -1,6 +1,5 @@
 import csv
 import logging
-from collections import defaultdict
 import sys
 import io
 

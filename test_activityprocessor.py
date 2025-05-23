@@ -13,6 +13,12 @@ def test_invalid_header_typo_should_raise_valueError():
         ap.check_csv_header(csv_data)
 
 
+def test_malformed_csv_row():
+    bad_csv = "Date, Activity, Duration\n2025-04-28, BSR - Something| XXX, 30:00\n2025-04-28, BSR - Something| XXX, 30:00, extra"
+    with pytest.raises(ValueError, match="Malformed CSV row at line 3"):
+        ap.process_activities(bad_csv)
+
+
 @pytest.mark.parametrize("input_str,expected_minutes", [
     ('30:00', 30),
     ('1:00:00', 60),

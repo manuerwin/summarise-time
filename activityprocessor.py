@@ -2,7 +2,6 @@ import csv
 import logging
 import sys
 import io
-import re
 
 # Configure logging
 logging.basicConfig(
@@ -69,14 +68,19 @@ def clean_activity_name(activity, category):
 
 def process_activities(csv_data):
     check_csv_header(csv_data)
-    reader = csv.DictReader(io.StringIO(csv_data), skipinitialspace=True)
+    reader = csv.reader(io.StringIO(csv_data), skipinitialspace=True)
+    next(reader)
 
     result = {}
 
-    for row in reader:
-        date = row['Date'].strip()
-        activity_raw = row['Activity'].strip()
-        duration_str = row['Duration'].strip()
+    for row_num, row in enumerate(reader, start=2):
+        if len(row) != len(EXPECTED_HEADER):
+            raise ValueError(
+                f"Malformed CSV row at line {row_num}: expected {len(EXPECTED_HEADER)} fields, got {len(row)}. Row: {row}"
+            )
+        date = row[0].strip()
+        activity_raw = row[1].strip()
+        duration_str = row[2].strip()
 
         category = extract_category(activity_raw)
         activity = clean_activity_name(activity_raw, category)

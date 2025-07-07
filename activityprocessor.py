@@ -48,6 +48,7 @@ def minutes_to_hours_decimal(minutes):
 
 
 def extract_category(activity):
+    activity = activity.upper()
     logger.debug(f"Extracting category from activity: {activity}")
     for cat in ['BSR OPS', 'BSR', 'INTERNAL', 'PRACTICE']:
         if activity.startswith(cat):

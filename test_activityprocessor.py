@@ -51,11 +51,16 @@ def test_minutes_to_hours_decimal(minutes, expected_hours):
 
 
 @pytest.mark.parametrize("activity,expected", [
-    ('BSR OPS - Test', 'BSR OPS'),
-    ('BSR OPS no dash', 'BSR OPS'),
-    ('BSR - Test', 'BSR'),
-    ('BSR Test no dash', 'BSR'),
+    ('BSR OPS - hyphen', 'BSR OPS'),
+    ('BSR OPS', 'BSR OPS'),
+    ('BSR Ops - mixed case', 'BSR OPS'),
+    ('BSR OPS no hyphen', 'BSR OPS'),
+    ('BSR - hyphen', 'BSR'),
+    ('BSR Test no hyphen', 'BSR'),
+    ('bsr Test lowercase', 'BSR'),
     ('PRACTICE Test', 'PRACTICE'),
+    ('internal lower case', 'INTERNAL'),
+    ('practice lower case test', 'PRACTICE'),
     ('Test other', 'OTHER'),
 ])
 def test_category_extraction(activity, expected):

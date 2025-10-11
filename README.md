@@ -11,13 +11,13 @@ Python app - process and summarise activity lines from CSV
 - each row:
   - date in format dd/mm/yyyy
   - category and activity text
-    - note: dash is optional and will be removed
-    - note: any detail after the pipe (|) character (for example XXX above) will be removed
+    - note: dash (-) is optional and will be removed
+    - note: any detail after the pipe (|) character (for example TMI below) will be removed
+    - commas (') must be escaped by surrounding with double-quotes ("")
   - duration in format [optional hours]:minutes:seconds
 
 For example:
-
-28/04/2025, INTERNAL - Doctor appointment | TMI, 30:00
+> 28/04/2025, "INTERNAL - Doctor appointment | TMI, surround commas with quotes", 30:00
 
 3. Run this script:
 >python3 activityprocessor.py path/to/your/.csv

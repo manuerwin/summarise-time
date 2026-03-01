@@ -133,6 +133,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     result = process_activities(csv_data)
+    maxCommentLength = 245
     for date in result:
         print(f"\n{date} ({result[date]['totalTimeHours']})")
         # Print per-category totalTimeHours and activities
@@ -140,6 +141,11 @@ if __name__ == "__main__":
             if category.startswith("totalTime"):
                 continue
             print(f"{category} ({cat_data['totalTimeHours']})")
+            totalLength = 0
             for activity, minutes in cat_data['activities']:
                 hours = minutes_to_hours_decimal(minutes)
-                print(f"  - {activity} ({hours})")
+                comments = f" - {activity} ({hours})"
+                print(comments)
+                totalLength += (len(comments))
+                if totalLength > maxCommentLength:
+                    print(f"###### {category} TOTAL CHARACTER LENGTH ({totalLength}) TOO BIG ######")

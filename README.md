@@ -17,7 +17,7 @@ Python app - process and summarise activity lines from CSV
   - duration in format [optional hours]:minutes:seconds
 
 For example:
-> 28/04/2025, "INTERNAL - Doctor appointment | TMI, surround commas with quotes", 30:00
+> 28/04/2025, "ADMIN - Doctor appointment | TMI, surround commas with quotes", 30:00
 
 3. Run this script:
 >python3 activityprocessor.py path/to/your/.csv

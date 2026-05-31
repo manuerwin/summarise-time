@@ -2,6 +2,10 @@ import pytest
 import activityprocessor as ap
 
 
+categories_source = "DOCS\nBACKUPS\nADMIN\nPROFESSIONAL"
+categories = ap.extract_categories(categories_source)
+
+
 def test_valid_header_should_not_fail():
     csv_data = "Date, Activity, Duration\nrow1,row2,row3"
     ap.check_csv_header(csv_data)  # Should not raise
@@ -14,9 +18,10 @@ def test_invalid_header_typo_should_raise_valueError():
 
 
 def test_malformed_csv_row():
-    bad_csv = "Date, Activity, Duration\n2025-04-28, BSR - Something| XXX, 30:00\n2025-04-28, BSR - Something| XXX, 30:00, extra"
+    # categories_source = "DOCS\nBACKUPS\nADMIN\nPROFESSIONAL"
+    bad_csv = "Date, Activity, Duration\n2025-04-28, BACKUPS - Something| XXX, 30:00\n2025-04-28, BACKUPS - Something| XXX, 30:00, extra"
     with pytest.raises(ValueError, match="Malformed CSV row at line 3"):
-        ap.process_activities(bad_csv)
+        ap.process_activities(categories_source, bad_csv)
 
 
 @pytest.mark.parametrize("input_str,expected_minutes", [
@@ -51,31 +56,31 @@ def test_minutes_to_hours_decimal(minutes, expected_hours):
 
 
 @pytest.mark.parametrize("activity,expected", [
-    ('BSR OPS - hyphen', 'BSR OPS'),
-    ('BSR OPS', 'BSR OPS'),
-    ('BSR Ops - mixed case', 'BSR OPS'),
-    ('BSR OPS no hyphen', 'BSR OPS'),
-    ('BSR - hyphen', 'BSR'),
-    ('BSR Test no hyphen', 'BSR'),
-    ('bsr Test lowercase', 'BSR'),
-    ('PRACTICE Test', 'PRACTICE'),
-    ('internal lower case', 'INTERNAL'),
-    ('practice lower case test', 'PRACTICE'),
+    ('DOCS - hyphen', 'DOCS'),
+    ('DOCS', 'DOCS'),
+    ('DOCS - mixed case', 'DOCS'),
+    ('DOCS no hyphen', 'DOCS'),
+    ('BACKUPS - hyphen', 'BACKUPS'),
+    ('BACKUPS Test no hyphen', 'BACKUPS'),
+    ('BACKUPS Test lowercase', 'BACKUPS'),
+    ('PROFESSIONAL Test', 'PROFESSIONAL'),
+    ('ADMIN lower case', 'ADMIN'),
+    ('PROFESSIONAL lower case test', 'PROFESSIONAL'),
     ('Test other', 'OTHER'),
 ])
 def test_category_extraction(activity, expected):
-    assert ap.extract_category(activity) == expected
+    assert ap.extract_category(activity, categories) == expected
 
 
 @pytest.mark.parametrize("category,activity,expected", [
-    ('BSR OPS', 'BSR OPS - no pipe', 'no pipe'),
-    ('BSR OPS', 'BSR OPS - nothing after pipe|', 'nothing after pipe'),
-    ('BSR', 'BSR pipe+no space|no space', 'pipe+no space'),
-    ('BSR', 'BSR pipe+space | ignore', 'pipe+space'),
-    ('BSR', 'BSR pipe+space |  ignore', 'pipe+space'),
-    ('BSR', 'BSR pipe+space  | ignore', 'pipe+space'),
-    ('BSR', 'BSR pipe+space |ignore', 'pipe+space'),
-    ('BSR', 'BSR pipe+space| ignore', 'pipe+space'),
+    ('DOCS', 'DOCS - no pipe', 'no pipe'),
+    ('DOCS', 'DOCS - nothing after pipe|', 'nothing after pipe'),
+    ('BACKUPS', 'BACKUPS pipe+no space|no space', 'pipe+no space'),
+    ('BACKUPS', 'BACKUPS pipe+space | ignore', 'pipe+space'),
+    ('BACKUPS', 'BACKUPS pipe+space |  ignore', 'pipe+space'),
+    ('BACKUPS', 'BACKUPS pipe+space  | ignore', 'pipe+space'),
+    ('BACKUPS', 'BACKUPS pipe+space |ignore', 'pipe+space'),
+    ('BACKUPS', 'BACKUPS pipe+space| ignore', 'pipe+space'),
 ])
 def test_clean_activity_name(category, activity, expected):
     assert ap.clean_activity_name(activity, category) == expected
@@ -84,23 +89,23 @@ def test_clean_activity_name(category, activity, expected):
 @pytest.mark.parametrize("input_csv,expected", [
     (
         "Date, Activity, Duration\n"
-        "28/04/2025, BSR appointment | detail to be ignored, 30:00\n"
-        "28/04/2025, BSR OPS - Pick up mail, 15:00\n"
-        "28/04/2025, BSR - admin |detail to be ignored, 30:00\n"
-        "28/04/2025, INTERNAL tax return, 1:00:00\n"
-        "28/04/2025, BSR - admin| duplicate combined with above, 30:00\n"
-        "28/04/2025, PRACTICE - Papa Reo, 1:00:00\n"
-        "28/04/2025, BSR - admin | , 30:00\n"
-        "29/04/2025, PRACTICE - admin| detail to be ignored, 30:00\n"
-        "29/04/2025, PRACTICE - PT conditioning, 45:00\n"
-        "29/04/2025, BSR - admin, 30:00\n"
+        "28/04/2025, BACKUPS appointment | detail to be ignored, 30:00\n"
+        "28/04/2025, DOCS - Pick up mail, 15:00\n"
+        "28/04/2025, BACKUPS - admin |detail to be ignored, 30:00\n"
+        "28/04/2025, ADMIN tax return, 1:00:00\n"
+        "28/04/2025, BACKUPS - admin| duplicate combined with above, 30:00\n"
+        "28/04/2025, PROFESSIONAL - Papa Reo, 1:00:00\n"
+        "28/04/2025, BACKUPS - admin | , 30:00\n"
+        "29/04/2025, PROFESSIONAL - admin| detail to be ignored, 30:00\n"
+        "29/04/2025, PROFESSIONAL - PT conditioning, 45:00\n"
+        "29/04/2025, BACKUPS - admin, 30:00\n"
         "29/04/2025, something else | detail to be ignored, 30:00\n"
         "29/04/2025, something else |, 30:00\n",
         {
             '28/04/2025': {
                 'totalDateMinutes': 255,
                 'totalDateHours': 4.25,
-                'BSR': {
+                'BACKUPS': {
                     'totalDateMinutes': 120,
                     'totalDateHours': 2.0,
                     'activities': [
@@ -108,21 +113,21 @@ def test_clean_activity_name(category, activity, expected):
                         ('admin', 90)
                     ]
                 },
-                'BSR OPS': {
+                'DOCS': {
                     'totalDateMinutes': 15,
                     'totalDateHours': 0.25,
                     'activities': [
                         ('Pick up mail', 15)
                     ]
                 },
-                'INTERNAL': {
+                'ADMIN': {
                     'totalDateMinutes': 60,
                     'totalDateHours': 1.00,
                     'activities': [
                         ('tax return', 60)
                     ]
                 },
-                'PRACTICE': {
+                'PROFESSIONAL': {
                     'totalDateMinutes': 60,
                     'totalDateHours': 1.00,
                     'activities': [
@@ -133,7 +138,7 @@ def test_clean_activity_name(category, activity, expected):
             '29/04/2025': {
                 'totalDateMinutes': 165,
                 'totalDateHours': 2.75,
-                'PRACTICE': {
+                'PROFESSIONAL': {
                     'totalDateMinutes': 75,
                     'totalDateHours': 1.25,
                     'activities': [
@@ -141,7 +146,7 @@ def test_clean_activity_name(category, activity, expected):
                         ('PT conditioning', 45)
                     ]
                 },
-                'BSR': {
+                'BACKUPS': {
                     'totalDateMinutes': 30,
                     'totalDateHours': 0.5,
                     'activities': [
@@ -160,4 +165,4 @@ def test_clean_activity_name(category, activity, expected):
     )
 ])
 def test_process_activities(input_csv, expected):
-    assert ap.process_activities(input_csv) == expected
+    assert ap.process_activities(categories_source, input_csv) == expected

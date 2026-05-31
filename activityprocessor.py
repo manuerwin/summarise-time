@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 EXPECTED_HEADER = ["Date", "Activity", "Duration"]
 
 
+def extract_categories(categories_source):
+    return [line.strip() for line in categories_source.splitlines() if line.strip()]
+
+
 def check_csv_header(csv_data):
     first_line = csv_data.lstrip().splitlines()[0]
     if first_line.startswith('\ufeff'):
@@ -47,10 +51,10 @@ def minutes_to_hours_decimal(minutes):
     return round(minutes / 60, 2)
 
 
-def extract_category(activity):
+def extract_category(activity, categories):
     activity = activity.upper()
     logger.debug(f"Extracting category from activity: {activity}")
-    for cat in ['BSR OPS', 'BSR', 'INTERNAL', 'PRACTICE']:
+    for cat in categories:
         if activity.startswith(cat):
             logger.debug(f"Matched category: {cat}")
             return cat
@@ -67,7 +71,8 @@ def clean_activity_name(activity, category):
     return cleaned.strip()
 
 
-def process_activities(csv_data):
+def process_activities(categories_source, csv_data):
+    categories = extract_categories(categories_source)
     check_csv_header(csv_data)
     reader = csv.reader(io.StringIO(csv_data), skipinitialspace=True)
     next(reader)
@@ -83,7 +88,7 @@ def process_activities(csv_data):
         activity_raw = row[1].strip()
         duration_str = row[2].strip()
 
-        category = extract_category(activity_raw)
+        category = extract_category(activity_raw, categories)
         activity = clean_activity_name(activity_raw, category)
         minutes = duration_to_minutes(duration_str)
 
@@ -124,6 +129,13 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         logger.error("Usage: python activityprocessor.py path/to/your/.csv")
         sys.exit(1)
+    category_file_path = 'categories.txt'
+    try:
+        with open(category_file_path, 'r', encoding='utf-8') as f:
+            categories_source = f.read()
+    except Exception as e:
+        logger.error(f"Failed to read file '{category_file_path}': {e}")
+        sys.exit(1)
     csv_file_path = sys.argv[1]
     try:
         with open(csv_file_path, 'r', encoding='utf-8') as f:
@@ -132,7 +144,7 @@ if __name__ == "__main__":
         logger.error(f"Failed to read file '{csv_file_path}': {e}")
         sys.exit(1)
 
-    result = process_activities(csv_data)
+    result = process_activities(categories_source, csv_data)
     maxCommentLength = 245
     total_overall_hours = 0.0
     for date in result:

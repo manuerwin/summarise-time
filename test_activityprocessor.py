@@ -98,59 +98,59 @@ def test_clean_activity_name(category, activity, expected):
         "29/04/2025, something else |, 30:00\n",
         {
             '28/04/2025': {
-                'totalTimeMinutes': 255,
-                'totalTimeHours': 4.25,
+                'totalDateMinutes': 255,
+                'totalDateHours': 4.25,
                 'BSR': {
-                    'totalTimeMinutes': 120,
-                    'totalTimeHours': 2.0,
+                    'totalDateMinutes': 120,
+                    'totalDateHours': 2.0,
                     'activities': [
                         ('appointment', 30),
                         ('admin', 90)
                     ]
                 },
                 'BSR OPS': {
-                    'totalTimeMinutes': 15,
-                    'totalTimeHours': 0.25,
+                    'totalDateMinutes': 15,
+                    'totalDateHours': 0.25,
                     'activities': [
                         ('Pick up mail', 15)
                     ]
                 },
                 'INTERNAL': {
-                    'totalTimeMinutes': 60,
-                    'totalTimeHours': 1.00,
+                    'totalDateMinutes': 60,
+                    'totalDateHours': 1.00,
                     'activities': [
                         ('tax return', 60)
                     ]
                 },
                 'PRACTICE': {
-                    'totalTimeMinutes': 60,
-                    'totalTimeHours': 1.00,
+                    'totalDateMinutes': 60,
+                    'totalDateHours': 1.00,
                     'activities': [
                         ('Papa Reo', 60)
                     ]
                 }
             },
             '29/04/2025': {
-                'totalTimeMinutes': 165,
-                'totalTimeHours': 2.75,
+                'totalDateMinutes': 165,
+                'totalDateHours': 2.75,
                 'PRACTICE': {
-                    'totalTimeMinutes': 75,
-                    'totalTimeHours': 1.25,
+                    'totalDateMinutes': 75,
+                    'totalDateHours': 1.25,
                     'activities': [
                         ('admin', 30),
                         ('PT conditioning', 45)
                     ]
                 },
                 'BSR': {
-                    'totalTimeMinutes': 30,
-                    'totalTimeHours': 0.5,
+                    'totalDateMinutes': 30,
+                    'totalDateHours': 0.5,
                     'activities': [
                         ('admin', 30)
                     ]
                 },
                 'OTHER': {
-                    'totalTimeMinutes': 60,
-                    'totalTimeHours': 1.0,
+                    'totalDateMinutes': 60,
+                    'totalDateHours': 1.0,
                     'activities': [
                         ('something else', 60)
                     ]

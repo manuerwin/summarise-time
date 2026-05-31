@@ -90,15 +90,15 @@ def process_activities(csv_data):
         # Initialize date entry if not present
         if date not in result:
             result[date] = {
-                'totalTimeMinutes': 0,
-                'totalTimeHours': 0.0
+                'totalDateMinutes': 0,
+                'totalDateHours': 0.0
             }
 
         # Initialize category entry if not present
         if category not in result[date]:
             result[date][category] = {
-                'totalTimeMinutes': 0,
-                'totalTimeHours': 0.0,
+                'totalDateMinutes': 0,
+                'totalDateHours': 0.0,
                 'activities': []
             }
 
@@ -112,10 +112,10 @@ def process_activities(csv_data):
             activities.append((activity, minutes))
 
         # Update category and day totals
-        result[date][category]['totalTimeMinutes'] += minutes
-        result[date][category]['totalTimeHours'] = minutes_to_hours_decimal(result[date][category]['totalTimeMinutes'])
-        result[date]['totalTimeMinutes'] += minutes
-        result[date]['totalTimeHours'] = minutes_to_hours_decimal(result[date]['totalTimeMinutes'])
+        result[date][category]['totalDateMinutes'] += minutes
+        result[date][category]['totalDateHours'] = minutes_to_hours_decimal(result[date][category]['totalDateMinutes'])
+        result[date]['totalDateMinutes'] += minutes
+        result[date]['totalDateHours'] = minutes_to_hours_decimal(result[date]['totalDateMinutes'])
 
     return result
 
@@ -134,18 +134,21 @@ if __name__ == "__main__":
 
     result = process_activities(csv_data)
     maxCommentLength = 245
+    total_overall_hours = 0.0
     for date in result:
-        print(f"\n{date} ({result[date]['totalTimeHours']})")
-        # Print per-category totalTimeHours and activities
+        print(f"\n{date} ({result[date]['totalDateHours']})")
+        # Print per-category totalDateHours and activities
         for category, cat_data in result[date].items():
-            if category.startswith("totalTime"):
+            if category.startswith("totalDate"):
                 continue
-            print(f"{category} ({cat_data['totalTimeHours']})")
+            print(f"{category} ({cat_data['totalDateHours']})")
             totalLength = 0
             for activity, minutes in cat_data['activities']:
                 hours = minutes_to_hours_decimal(minutes)
+                total_overall_hours += hours
                 comments = f" - {activity} ({hours})"
                 print(comments)
                 totalLength += (len(comments))
                 if totalLength > maxCommentLength:
                     print(f"###### {category} TOTAL CHARACTER LENGTH ({totalLength}) TOO BIG ######")
+    print(f"\nTOTAL OVERALL HOURS: {total_overall_hours}")

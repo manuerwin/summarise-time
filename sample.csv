@@ -6,11 +6,11 @@ Date, Activity, Duration
 25/05/2025, PROFESSIONAL - Papa Reo  | detail ignored, 1:00:00
 25/05/2025, BACKUPS - admin, 30:00
 25/05/2025, PROFESSIONAL - PT conditioning, 45:00
-25/05/2025, BACKUPS - admin, 30:00
+25/05/2025, backups - admin, 30:00
 25/05/2025, something else, 30:00
 26/05/2025, BACKUPS Doctor appointment, 30:00
 26/05/2025, DOCS - Pick up mail, 15:00
-26/05/2025, BACKUPS - admin, 30:00
+26/05/2025, BAckUPS - admin, 30:00
 26/05/2025, ADMIN tax return| detail ignored, 1:00:00
 26/05/2025, PROFESSIONAL - Papa Reo, 1:00:00
 27/05/2025, BACKUPS Doctor appointment, 30:00
@@ -19,7 +19,7 @@ Date, Activity, Duration
 27/05/2025, ADMIN tax return, 1:00:00
 27/05/2025, PROFESSIONAL - Papa Reo, 1:00:00
 27/05/2025, BACKUPS - admin, 30:00
-27/05/2025, PROFESSIONAL - PT conditioning | detail ignored, 45:00
+27/05/2025, pROFESSIONAL - PT conditioning | detail ignored, 45:00
 27/05/2025, BACKUPS - admin, 30:00
 27/05/2025, something else, 30:00
 28/05/2025, BACKUPS Doctor appointment, 30:00

@@ -2,6 +2,7 @@ import csv
 import logging
 import sys
 import io
+import re
 
 # Configure logging
 logging.basicConfig(
@@ -52,10 +53,9 @@ def minutes_to_hours_decimal(minutes):
 
 
 def extract_category(activity, categories):
-    activity = activity.upper()
     logger.debug(f"Extracting category from activity: {activity}")
     for cat in categories:
-        if activity.startswith(cat):
+        if activity.upper().startswith(cat.upper()):
             logger.debug(f"Matched category: {cat}")
             return cat
     logger.debug("No matching category found, using 'OTHER'")
@@ -64,7 +64,8 @@ def extract_category(activity, categories):
 
 def clean_activity_name(activity, category):
     # Remove the category prefix and any leading/trailing spaces/dashes
-    cleaned = activity.replace(category, '', 1).strip(' -')
+    pattern = re.compile(re.escape(category), re.IGNORECASE)
+    cleaned = pattern.sub('', activity).strip(' -')
     # If there's a '|', remove everything from it onwards
     if '|' in cleaned:
         cleaned = cleaned.split('|', 1)[0].rstrip()

@@ -58,7 +58,7 @@ def test_minutes_to_hours_decimal(minutes, expected_hours):
 @pytest.mark.parametrize("activity,expected", [
     ('DOCS - hyphen', 'DOCS'),
     ('DOCS', 'DOCS'),
-    ('DOCS - mixed case', 'DOCS'),
+    ('DOCS - Mixed case', 'DOCS'),
     ('DOCS no hyphen', 'DOCS'),
     ('BACKUPS - hyphen', 'BACKUPS'),
     ('BACKUPS Test no hyphen', 'BACKUPS'),
@@ -66,6 +66,7 @@ def test_minutes_to_hours_decimal(minutes, expected_hours):
     ('PROFESSIONAL Test', 'PROFESSIONAL'),
     ('ADMIN lower case', 'ADMIN'),
     ('PROFESSIONAL lower case test', 'PROFESSIONAL'),
+    ('admin category lower case test', 'ADMIN'),
     ('Test other', 'OTHER'),
 ])
 def test_category_extraction(activity, expected):
@@ -93,12 +94,12 @@ def test_clean_activity_name(category, activity, expected):
         "28/04/2025, DOCS - Pick up mail, 15:00\n"
         "28/04/2025, BACKUPS - admin |detail to be ignored, 30:00\n"
         "28/04/2025, ADMIN tax return, 1:00:00\n"
-        "28/04/2025, BACKUPS - admin| duplicate combined with above, 30:00\n"
+        "28/04/2025, bACKUPS - admin| duplicate combined with above, 30:00\n"
         "28/04/2025, PROFESSIONAL - Papa Reo, 1:00:00\n"
         "28/04/2025, BACKUPS - admin | , 30:00\n"
         "29/04/2025, PROFESSIONAL - admin| detail to be ignored, 30:00\n"
         "29/04/2025, PROFESSIONAL - PT conditioning, 45:00\n"
-        "29/04/2025, BACKUPS - admin, 30:00\n"
+        "29/04/2025, backups - admin, 30:00\n"
         "29/04/2025, something else | detail to be ignored, 30:00\n"
         "29/04/2025, something else |, 30:00\n",
         {

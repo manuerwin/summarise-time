@@ -6,7 +6,8 @@ Python app - process and summarise activity lines from CSV
 
 ## Usage
 1. Download to local
-2. Generate your csv file of activities
+2. Update categories.txt with your categories (can be upper, mixed, or lower case), one per line
+3. Generate your csv file of activities
 - header format: Date, Activity, Duration
 - each row:
   - date in format dd/mm/yyyy
@@ -14,13 +15,14 @@ Python app - process and summarise activity lines from CSV
     - note: dash (-) is optional and will be removed
     - note: any detail after the pipe (|) character (for example TMI below) will be removed
     - commas (') must be escaped by surrounding with double-quotes ("")
+    - category can be upper, mixed or lower case
   - duration in format [optional hours]:minutes:seconds
 
 For example:
-> 28/04/2025, "ADMIN - Doctor appointment | TMI, surround commas with quotes", 30:00
+> 28/04/2025, "adMIN - Doctor appointment | TMI, surround commas with quotes", 30:00
 
 3. Run this script:
->python3 activityprocessor.py path/to/your/.csv
+> python3 activityprocessor.py path/to/your/.csv
 
 You will be warned if the header doesn't match and/or any csv rows are malformed.
 

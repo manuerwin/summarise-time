@@ -1,1 +1,2 @@
+# Development/test dependencies only. The app itself uses the Python standard library.
 pytest

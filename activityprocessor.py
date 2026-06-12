@@ -3,6 +3,7 @@ import logging
 import sys
 import io
 import re
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 EXPECTED_HEADER = ["Date", "Activity", "Duration"]
+MAX_COMMENT_LENGTH = 245
 
 
 def extract_categories(categories_source):
@@ -63,9 +65,9 @@ def extract_category(activity, categories):
 
 
 def clean_activity_name(activity, category):
-    # Remove the category prefix and any leading/trailing spaces/dashes
-    pattern = re.compile(re.escape(category), re.IGNORECASE)
-    cleaned = pattern.sub('', activity).strip(' -')
+    # Remove leading category prefix
+    pattern = re.compile('^' + re.escape(category), re.IGNORECASE)
+    cleaned = pattern.sub('', activity, count=1).strip(' -')
     # If there's a '|', remove everything from it onwards
     if '|' in cleaned:
         cleaned = cleaned.split('|', 1)[0].rstrip()
@@ -97,40 +99,67 @@ def process_activities(categories_source, csv_data):
         if date not in result:
             result[date] = {
                 'totalDateMinutes': 0,
-                'totalDateHours': 0.0
+                'totalDateHours': 0.0,
+                'categories': {}
             }
+        date_entry = result[date]
 
         # Initialize category entry if not present
-        if category not in result[date]:
-            result[date][category] = {
+        if category not in date_entry['categories']:
+            date_entry['categories'][category] = {
                 'totalDateMinutes': 0,
                 'totalDateHours': 0.0,
-                'activities': []
+                'activities': {}
             }
+        cat_entry = date_entry['categories'][category]
 
-        # Combine duplicate activities (preserving order)
-        activities = result[date][category]['activities']
-        for i, (act, mins) in enumerate(activities):
-            if act == activity:
-                activities[i] = (act, mins + minutes)
-                break
-        else:
-            activities.append((activity, minutes))
+        # Combine duplicate activities (preserving first-seen order)
+        activities = cat_entry['activities']
+        activities[activity] = activities.get(activity, 0) + minutes
 
-        # Update category and day totals
-        result[date][category]['totalDateMinutes'] += minutes
-        result[date][category]['totalDateHours'] = minutes_to_hours_decimal(result[date][category]['totalDateMinutes'])
-        result[date]['totalDateMinutes'] += minutes
-        result[date]['totalDateHours'] = minutes_to_hours_decimal(result[date]['totalDateMinutes'])
+        # accumulate minutes
+        cat_entry['totalDateMinutes'] += minutes
+        date_entry['totalDateMinutes'] += minutes
+
+    # compute hours
+    for date_entry in result.values():
+        date_entry['totalDateHours'] = minutes_to_hours_decimal(date_entry['totalDateMinutes'])
+        for cat_entry in date_entry['categories'].values():
+            cat_entry['totalDateHours'] = minutes_to_hours_decimal(cat_entry['totalDateMinutes'])
+            cat_entry['activities'] = list(cat_entry['activities'].items())
 
     return result
+
+
+def format_result(result, max_comment_length=MAX_COMMENT_LENGTH):
+    lines = []
+    total_overall_minutes = 0
+    for date, date_entry in result.items():
+        total_overall_minutes += date_entry['totalDateMinutes']
+        lines.append(f"\n{date} ({date_entry['totalDateHours']})")
+        for category, cat_data in date_entry['categories'].items():
+            lines.append(f"{category} ({cat_data['totalDateHours']})")
+            total_length = 0
+            for activity, minutes in cat_data['activities']:
+                hours = minutes_to_hours_decimal(minutes)
+                comment = f" - {activity} ({hours})"
+                lines.append(comment)
+                total_length += len(comment)
+
+            if total_length > max_comment_length:
+                lines.append(
+                    f"###### {category} TOTAL CHARACTER LENGTH ({total_length}) TOO BIG ######")
+    lines.append(
+        f"\nTOTAL OVERALL HOURS: {minutes_to_hours_decimal(total_overall_minutes)}")
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         logger.error("Usage: python activityprocessor.py path/to/your/.csv")
         sys.exit(1)
-    category_file_path = 'categories.txt'
+
+    category_file_path = Path(__file__).with_name('categories.txt')
     try:
         with open(category_file_path, 'r', encoding='utf-8') as f:
             categories_source = f.read()
@@ -146,22 +175,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     result = process_activities(categories_source, csv_data)
-    maxCommentLength = 245
-    total_overall_hours = 0.0
-    for date in result:
-        print(f"\n{date} ({result[date]['totalDateHours']})")
-        # Print per-category totalDateHours and activities
-        for category, cat_data in result[date].items():
-            if category.startswith("totalDate"):
-                continue
-            print(f"{category} ({cat_data['totalDateHours']})")
-            totalLength = 0
-            for activity, minutes in cat_data['activities']:
-                hours = minutes_to_hours_decimal(minutes)
-                total_overall_hours += hours
-                comments = f" - {activity} ({hours})"
-                print(comments)
-                totalLength += (len(comments))
-                if totalLength > maxCommentLength:
-                    print(f"###### {category} TOTAL CHARACTER LENGTH ({totalLength}) TOO BIG ######")
-    print(f"\nTOTAL OVERALL HOURS: {total_overall_hours}")
+    print(format_result(result))

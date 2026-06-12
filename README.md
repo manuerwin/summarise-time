@@ -27,9 +27,9 @@ For example:
 You will be warned if the header doesn't match and/or any csv rows are malformed.
 
 ## License
-This is free and unencumbered software released into the public domain.
+Released under the MIT License. See [LICENSE](LICENSE) for the full text.
 
-Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and by any means.
+Anyone is free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions in the license (retaining the copyright and permission notice).
 
 ## Development testing
 Via shell

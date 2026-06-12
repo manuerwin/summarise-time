@@ -82,6 +82,8 @@ def test_category_extraction(activity, expected):
     ('BACKUPS', 'BACKUPS pipe+space  | ignore', 'pipe+space'),
     ('BACKUPS', 'BACKUPS pipe+space |ignore', 'pipe+space'),
     ('BACKUPS', 'BACKUPS pipe+space| ignore', 'pipe+space'),
+    ('ADMIN', 'ADMIN only ADMIN leading prefix removed', 'only ADMIN leading prefix removed'),
+    ('DOCS', 'DOCS about DOCS', 'about DOCS'),
 ])
 def test_clean_activity_name(category, activity, expected):
     assert ap.clean_activity_name(activity, category) == expected
@@ -106,60 +108,64 @@ def test_clean_activity_name(category, activity, expected):
             '28/04/2025': {
                 'totalDateMinutes': 255,
                 'totalDateHours': 4.25,
-                'BACKUPS': {
-                    'totalDateMinutes': 120,
-                    'totalDateHours': 2.0,
-                    'activities': [
-                        ('appointment', 30),
-                        ('admin', 90)
-                    ]
-                },
-                'DOCS': {
-                    'totalDateMinutes': 15,
-                    'totalDateHours': 0.25,
-                    'activities': [
-                        ('Pick up mail', 15)
-                    ]
-                },
-                'ADMIN': {
-                    'totalDateMinutes': 60,
-                    'totalDateHours': 1.00,
-                    'activities': [
-                        ('tax return', 60)
-                    ]
-                },
-                'PROFESSIONAL': {
-                    'totalDateMinutes': 60,
-                    'totalDateHours': 1.00,
-                    'activities': [
-                        ('Papa Reo', 60)
-                    ]
+                'categories': {
+                    'BACKUPS': {
+                        'totalDateMinutes': 120,
+                        'totalDateHours': 2.0,
+                        'activities': [
+                            ('appointment', 30),
+                            ('admin', 90)
+                        ]
+                    },
+                    'DOCS': {
+                        'totalDateMinutes': 15,
+                        'totalDateHours': 0.25,
+                        'activities': [
+                            ('Pick up mail', 15)
+                        ]
+                    },
+                    'ADMIN': {
+                        'totalDateMinutes': 60,
+                        'totalDateHours': 1.00,
+                        'activities': [
+                            ('tax return', 60)
+                        ]
+                    },
+                    'PROFESSIONAL': {
+                        'totalDateMinutes': 60,
+                        'totalDateHours': 1.00,
+                        'activities': [
+                            ('Papa Reo', 60)
+                        ]
+                    }
                 }
             },
             '29/04/2025': {
                 'totalDateMinutes': 165,
                 'totalDateHours': 2.75,
-                'PROFESSIONAL': {
-                    'totalDateMinutes': 75,
-                    'totalDateHours': 1.25,
-                    'activities': [
-                        ('admin', 30),
-                        ('PT conditioning', 45)
-                    ]
-                },
-                'BACKUPS': {
-                    'totalDateMinutes': 30,
-                    'totalDateHours': 0.5,
-                    'activities': [
-                        ('admin', 30)
-                    ]
-                },
-                'OTHER': {
-                    'totalDateMinutes': 60,
-                    'totalDateHours': 1.0,
-                    'activities': [
-                        ('something else', 60)
-                    ]
+                'categories': {
+                    'PROFESSIONAL': {
+                        'totalDateMinutes': 75,
+                        'totalDateHours': 1.25,
+                        'activities': [
+                            ('admin', 30),
+                            ('PT conditioning', 45)
+                        ]
+                    },
+                    'BACKUPS': {
+                        'totalDateMinutes': 30,
+                        'totalDateHours': 0.5,
+                        'activities': [
+                            ('admin', 30)
+                        ]
+                    },
+                    'OTHER': {
+                        'totalDateMinutes': 60,
+                        'totalDateHours': 1.0,
+                        'activities': [
+                            ('something else', 60)
+                        ]
+                    }
                 }
             }
         }
@@ -167,3 +173,35 @@ def test_clean_activity_name(category, activity, expected):
 ])
 def test_process_activities(input_csv, expected):
     assert ap.process_activities(categories_source, input_csv) == expected
+
+
+def test_total_overall_hours_derives_from_grand_total_minutes():
+    # Three days of 10 minutes. Each day rounds to 0.17h, so naively adding the
+    # displayed per-day totals gives 0.51. The overall total must instead derive
+    # from the grand total of minutes: round(30/60, 2) == 0.5. Hardcoded so the
+    # test asserts the intended behaviour, not the implementation against itself.
+    csv_data = (
+        "Date, Activity, Duration\n"
+        "01/01/2025, DOCS a, 10:00\n"
+        "02/01/2025, DOCS b, 10:00\n"
+        "03/01/2025, DOCS c, 10:00\n"
+    )
+    result = ap.process_activities(categories_source, csv_data)
+    summary = ap.format_result(result)
+    naive_sum_of_displayed = round(
+        sum(result[d]['totalDateHours'] for d in result), 2)
+    assert naive_sum_of_displayed == 0.51  # each day displays 0.17
+    assert "TOTAL OVERALL HOURS: 0.5" in summary
+    assert "TOTAL OVERALL HOURS: 0.51" not in summary
+
+
+def test_format_result_emits_single_length_warning_per_category():
+    long_name = "x" * 300
+    csv_data = (
+        "Date, Activity, Duration\n"
+        f"01/01/2025, DOCS {long_name}, 30:00\n"
+        f"01/01/2025, DOCS another entry, 30:00\n"
+    )
+    result = ap.process_activities(categories_source, csv_data)
+    summary = ap.format_result(result)
+    assert summary.count("TOTAL CHARACTER LENGTH") == 1

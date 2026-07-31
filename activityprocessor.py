@@ -134,10 +134,12 @@ def process_activities(categories_source, csv_data):
 def format_result(result, max_comment_length=MAX_COMMENT_LENGTH):
     lines = []
     total_overall_minutes = 0
+    category_totals = {}  # category -> minutes, in first-seen order
     for date, date_entry in result.items():
         total_overall_minutes += date_entry['totalDateMinutes']
         lines.append(f"\n{date} ({date_entry['totalDateHours']})")
         for category, cat_data in date_entry['categories'].items():
+            category_totals[category] = category_totals.get(category, 0) + cat_data['totalDateMinutes']
             lines.append(f"{category} ({cat_data['totalDateHours']})")
             total_length = 0
             for activity, minutes in cat_data['activities']:
@@ -149,8 +151,11 @@ def format_result(result, max_comment_length=MAX_COMMENT_LENGTH):
             if total_length > max_comment_length:
                 lines.append(
                     f"###### {category} TOTAL CHARACTER LENGTH ({total_length}) TOO BIG ######")
+    lines.append("\nOVERALL HOURS:")
+    for category, minutes in category_totals.items():
+        lines.append(f"{category}: {minutes_to_hours_decimal(minutes)}")
     lines.append(
-        f"\nTOTAL OVERALL HOURS: {minutes_to_hours_decimal(total_overall_minutes)}")
+        f"\nTOTAL: {minutes_to_hours_decimal(total_overall_minutes)}")
     return "\n".join(lines)
 
 

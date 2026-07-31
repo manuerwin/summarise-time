@@ -191,8 +191,8 @@ def test_total_overall_hours_derives_from_grand_total_minutes():
     naive_sum_of_displayed = round(
         sum(result[d]['totalDateHours'] for d in result), 2)
     assert naive_sum_of_displayed == 0.51  # each day displays 0.17
-    assert "TOTAL OVERALL HOURS: 0.5" in summary
-    assert "TOTAL OVERALL HOURS: 0.51" not in summary
+    assert "TOTAL: 0.5" in summary
+    assert "TOTAL: 0.51" not in summary
 
 
 def test_format_result_emits_single_length_warning_per_category():
@@ -205,3 +205,31 @@ def test_format_result_emits_single_length_warning_per_category():
     result = ap.process_activities(categories_source, csv_data)
     summary = ap.format_result(result)
     assert summary.count("TOTAL CHARACTER LENGTH") == 1
+
+
+def test_format_result_overall_by_category():
+    # DOCS is seen first (15 min total) but BACKUPS accrues more hours (75 min),
+    # so first-seen order (DOCS before BACKUPS) differs from hours-descending.
+    csv_data = (
+        "Date, Activity, Duration\n"
+        "01/01/2025, DOCS mail, 15:00\n"
+        "01/01/2025, BACKUPS admin, 30:00\n"
+        "02/01/2025, BACKUPS admin, 45:00\n"
+    )
+    result = ap.process_activities(categories_source, csv_data)
+    summary = ap.format_result(result)
+
+    # Header present, above the grand total line.
+    assert "OVERALL HOURS:" in summary
+    assert summary.index("OVERALL HOURS:") < summary.index("\nTOTAL:")
+
+    # Per-category totals summed across dates, in first-seen order (DOCS before
+    # BACKUPS). The per-day lines use parentheses, so assert the colon form
+    # inside the OVERALL section to target the summary block specifically.
+    section = summary[summary.index("OVERALL HOURS:"):summary.index("\nTOTAL:")]
+    assert "DOCS: 0.25" in section     # 15 min
+    assert "BACKUPS: 1.25" in section  # 30 + 45 = 75 min
+    assert section.index("DOCS: 0.25") < section.index("BACKUPS: 1.25")
+
+    # Category totals sum to the grand total.
+    assert "TOTAL: 1.5" in summary

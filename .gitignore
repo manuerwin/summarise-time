@@ -92,3 +92,6 @@ ENV/
 
 # VSCode settings
 .vscode/
+
+# macOS
+.DS_Store
